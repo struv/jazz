@@ -87,37 +87,78 @@ const VirtualPiano = ({ highlightedNotes = [], onNoteClick }) => {
   const blackKeys = ['C#', 'D#', '', 'F#', 'G#', 'A#', ''];
 
   return (
-    <div className="relative bg-gray-800 p-4 rounded-lg">
-      <div className="flex relative">
+    <div className="relative bg-gray-900 p-6 rounded-lg shadow-inner">
+      <div className="flex relative justify-center">
+        {/* White Keys */}
         {whiteKeys.map((note, index) => (
           <button
             key={note}
-            className={`w-12 h-32 border border-gray-300 bg-white hover:bg-gray-100 ${
-              highlightedNotes.includes(note) ? 'bg-blue-200' : ''
+            className={`relative w-14 h-40 border-r border-gray-400 transition-all duration-150 ${
+              highlightedNotes.includes(note) 
+                ? 'bg-blue-300 hover:bg-blue-400 shadow-lg transform translate-y-1' 
+                : 'bg-white hover:bg-gray-50 active:bg-gray-100'
+            } ${index === 0 ? 'rounded-l-lg border-l' : ''} ${
+              index === whiteKeys.length - 1 ? 'rounded-r-lg' : ''
             }`}
             onClick={() => onNoteClick && onNoteClick(note)}
+            style={{
+              boxShadow: highlightedNotes.includes(note) 
+                ? '0 4px 8px rgba(59, 130, 246, 0.3), inset 0 1px 3px rgba(0,0,0,0.1)' 
+                : 'inset 0 1px 3px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.1)'
+            }}
           >
-            <span className="text-xs mt-24 block">{note}</span>
+            <span className={`absolute bottom-3 left-1/2 transform -translate-x-1/2 text-sm font-medium ${
+              highlightedNotes.includes(note) ? 'text-blue-800' : 'text-gray-600'
+            }`}>
+              {note}
+            </span>
           </button>
         ))}
-        <div className="absolute flex">
+        
+        {/* Black Keys */}
+        <div className="absolute flex top-0 left-0 right-0 justify-center">
           {blackKeys.map((note, index) => (
             note ? (
               <button
                 key={note}
-                className={`w-8 h-20 bg-gray-900 hover:bg-gray-700 ml-8 ${
-                  highlightedNotes.includes(note) ? 'bg-blue-600' : ''
+                className={`w-8 h-24 transition-all duration-150 ${
+                  highlightedNotes.includes(note)
+                    ? 'bg-blue-600 hover:bg-blue-700 shadow-lg transform translate-y-1'
+                    : 'bg-gray-800 hover:bg-gray-700 active:bg-gray-600'
                 }`}
-                style={{ marginLeft: index === 0 ? '2rem' : '2.5rem' }}
+                style={{
+                  marginLeft: index === 0 ? '2.75rem' : '2.75rem',
+                  boxShadow: highlightedNotes.includes(note)
+                    ? '0 4px 8px rgba(37, 99, 235, 0.4), inset 0 1px 2px rgba(255,255,255,0.1)'
+                    : 'inset 0 1px 2px rgba(255,255,255,0.1), 0 3px 6px rgba(0,0,0,0.3)'
+                }}
                 onClick={() => onNoteClick && onNoteClick(note)}
               >
-                <span className="text-white text-xs mt-16 block">{note}</span>
+                <span className={`block mt-16 text-xs font-medium ${
+                  highlightedNotes.includes(note) ? 'text-blue-200' : 'text-gray-300'
+                }`}>
+                  {note}
+                </span>
               </button>
             ) : (
-              <div key={index} className="w-8 ml-8" style={{ marginLeft: index === 0 ? '2rem' : '2.5rem' }} />
+              <div 
+                key={`space-${index}`} 
+                className="w-8"
+                style={{ marginLeft: index === 0 ? '2.75rem' : '2.75rem' }}
+              />
             )
           ))}
         </div>
+      </div>
+      
+      {/* Piano Info */}
+      <div className="mt-4 text-center">
+        <p className="text-gray-400 text-sm">
+          {highlightedNotes.length > 0 
+            ? `Highlighted: ${highlightedNotes.join(', ')}` 
+            : 'Click keys to play individual notes'
+          }
+        </p>
       </div>
     </div>
   );
@@ -164,77 +205,139 @@ const ChordProgressionTrainer = ({ audioEngine }) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold mb-4">{currentProgression.title}</h2>
-        
-        <div className="flex gap-4 mb-4">
-          <select 
-            value={currentProgression.title} 
-            onChange={(e) => setCurrentProgression(JAZZ_STANDARDS.find(s => s.title === e.target.value))}
-            className="px-3 py-2 border rounded"
-          >
-            {JAZZ_STANDARDS.map(standard => (
-              <option key={standard.title} value={standard.title}>{standard.title}</option>
-            ))}
-          </select>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Left Column - Controls and Progression */}
+      <div className="space-y-6">
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold mb-4">{currentProgression.title}</h2>
           
-          <select value={selectedKey} onChange={(e) => transposeProgression(e.target.value)} className="px-3 py-2 border rounded">
-            {NOTES.map(note => (
-              <option key={note} value={note}>{note}</option>
-            ))}
-          </select>
-          
-          <button 
-            onClick={() => setShowVoicing(!showVoicing)}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            {showVoicing ? 'Hide' : 'Show'} Voicing
-          </button>
-        </div>
-
-        <div className="grid grid-cols-4 gap-2 mb-6">
-          {currentProgression.progression.map((chord, index) => (
-            <div
-              key={index}
-              className={`p-3 text-center rounded cursor-pointer border-2 ${
-                index === currentChordIndex 
-                  ? 'bg-blue-500 text-white border-blue-600' 
-                  : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
-              }`}
-              onClick={() => setCurrentChordIndex(index)}
-            >
-              {chord}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <select 
+                value={currentProgression.title} 
+                onChange={(e) => setCurrentProgression(JAZZ_STANDARDS.find(s => s.title === e.target.value))}
+                className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                {JAZZ_STANDARDS.map(standard => (
+                  <option key={standard.title} value={standard.title}>{standard.title}</option>
+                ))}
+              </select>
+              
+              <select 
+                value={selectedKey} 
+                onChange={(e) => transposeProgression(e.target.value)} 
+                className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                {NOTES.map(note => (
+                  <option key={note} value={note}>Key: {note}</option>
+                ))}
+              </select>
+              
+              <button 
+                onClick={() => setShowVoicing(!showVoicing)}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                {showVoicing ? 'Hide' : 'Show'} Voicing
+              </button>
             </div>
-          ))}
+
+            <div className="grid grid-cols-2 gap-2">
+              {currentProgression.progression.map((chord, index) => (
+                <div
+                  key={index}
+                  className={`p-3 text-center rounded-lg cursor-pointer border-2 transition-all ${
+                    index === currentChordIndex 
+                      ? 'bg-blue-500 text-white border-blue-600 shadow-lg' 
+                      : 'bg-gray-50 border-gray-300 hover:bg-gray-100 hover:border-gray-400'
+                  }`}
+                  onClick={() => setCurrentChordIndex(index)}
+                >
+                  <div className="font-semibold">{chord}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-3 justify-center">
+              <button 
+                onClick={prevChord} 
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Previous
+              </button>
+              <button 
+                onClick={playChord} 
+                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold"
+              >
+                Play Chord
+              </button>
+              <button 
+                onClick={nextChord} 
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex gap-4 mb-4">
-          <button onClick={prevChord} className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
-            Previous
-          </button>
-          <button onClick={playChord} className="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600">
-            Play Chord
-          </button>
-          <button onClick={nextChord} className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
-            Next
-          </button>
-        </div>
-
-        <div className="text-center mb-4">
-          <h3 className="text-xl font-semibold">{currentChord}</h3>
-          {showVoicing && (
-            <p className="text-gray-600 mt-2">Notes: {chordNotes.join(', ')}</p>
-          )}
+        {/* Chord Information Panel */}
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <h3 className="text-xl font-semibold mb-4">Current Chord</h3>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-blue-600 mb-2">{currentChord}</div>
+            {showVoicing && (
+              <div className="space-y-2">
+                <p className="text-gray-600">Chord Tones:</p>
+                <div className="flex justify-center gap-2 flex-wrap">
+                  {chordNotes.map((note, index) => (
+                    <span 
+                      key={index}
+                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-mono text-sm"
+                    >
+                      {note.replace(/\d/, '')}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {showVoicing && (
-        <VirtualPiano 
-          highlightedNotes={chordNotes.map(note => note.replace(/\d/, ''))} 
-          onNoteClick={(note) => audioEngine.start().then(() => audioEngine.playNote(note + '4'))}
-        />
-      )}
+      {/* Right Column - Virtual Piano */}
+      <div className="space-y-6">
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <h3 className="text-xl font-semibold mb-4">Virtual Piano</h3>
+          {showVoicing ? (
+            <VirtualPiano 
+              highlightedNotes={chordNotes.map(note => note.replace(/\d/, ''))} 
+              onNoteClick={(note) => audioEngine.start().then(() => audioEngine.playNote(note + '4'))}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-40 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+              <div className="text-center text-gray-500">
+                <div className="text-lg mb-2">🎹</div>
+                <p>Click "Show Voicing" to see the virtual piano</p>
+                <p className="text-sm">with highlighted chord notes</p>
+              </div>
+            </div>
+          )}
+
+          {/* Practice Tips - now inside the same white container */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+              <span className="text-blue-500 mr-2">💡</span>
+              Practice Tips
+            </h4>
+            <ul className="text-sm text-gray-600 space-y-2">
+              <li>• Try playing the progression in different keys</li>
+              <li>• Listen for the harmonic relationships between chords</li>
+              <li>• Practice transitioning smoothly between chords</li>
+              <li>• Pay attention to common tones and voice leading</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -443,6 +546,7 @@ const VoiceLeadingTrainer = ({ audioEngine }) => {
   const [selectedSong, setSelectedSong] = useState(songs[0]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showMovement, setShowMovement] = useState(true);
+  const [showAllTransitions, setShowAllTransitions] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const voiceColors = ['#ef4444', '#f97316', '#eab308', '#22c55e']; // red, orange, yellow, green
@@ -490,14 +594,23 @@ const VoiceLeadingTrainer = ({ audioEngine }) => {
   };
 
   const VoiceMovementVisualizer = () => {
-    if (!showMovement || currentIndex === 0) return null;
+    if (!showMovement) return null;
+
+    if (currentIndex === 0) {
+      return (
+        <div className="bg-gray-50 p-4 rounded-lg mt-4">
+          <h4 className="font-semibold mb-3">Voice Movement Analysis</h4>
+          <p className="text-gray-600">Select or play through chords to see voice leading analysis</p>
+        </div>
+      );
+    }
 
     const prevVoicing = selectedSong.voicings[currentIndex - 1];
     const currentVoicing = selectedSong.voicings[currentIndex];
 
     return (
       <div className="bg-gray-50 p-4 rounded-lg mt-4">
-        <h4 className="font-semibold mb-3">Voice Movement Analysis</h4>
+        <h4 className="font-semibold mb-3">Voice Movement Analysis - Current Transition</h4>
         <div className="space-y-2">
           {voiceNames.map((voiceName, voiceIndex) => {
             const from = prevVoicing[voiceIndex];
@@ -541,6 +654,307 @@ const VoiceLeadingTrainer = ({ audioEngine }) => {
     );
   };
 
+  const AllTransitionsView = () => {
+    if (!showMovement) return null;
+
+    const transitions = [];
+    for (let i = 1; i < selectedSong.voicings.length; i++) {
+      const prevVoicing = selectedSong.voicings[i - 1];
+      const currentVoicing = selectedSong.voicings[i];
+      const fromChord = selectedSong.progression[i - 1];
+      const toChord = selectedSong.progression[i];
+      
+      const voiceMovements = voiceNames.map((voiceName, voiceIndex) => {
+        const from = prevVoicing[voiceIndex];
+        const to = currentVoicing[voiceIndex];
+        const distance = getMovementDistance(from, to);
+        const direction = to > from ? '↑' : to < from ? '↓' : '→';
+        const isCommon = isCommonTone(from, to);
+        
+        return {
+          voiceName,
+          voiceIndex,
+          from,
+          to,
+          distance,
+          direction,
+          isCommon
+        };
+      });
+
+      const totalMovement = prevVoicing.reduce((total, note, i) => 
+        total + getMovementDistance(note, currentVoicing[i]), 0
+      );
+
+      transitions.push({
+        fromChord,
+        toChord,
+        voiceMovements,
+        totalMovement,
+        transitionIndex: i - 1
+      });
+    }
+
+    return (
+      <div className="bg-gray-50 p-4 rounded-lg mt-4">
+        <h4 className="font-semibold mb-4">Complete Voice Leading Analysis</h4>
+        
+        {/* Overview Chart */}
+        <div className="mb-6">
+          <h5 className="font-medium mb-3">Voice Movement Overview</h5>
+          <div className="grid grid-cols-4 gap-4 mb-4">
+            {selectedSong.progression.map((chord, index) => (
+              <div key={index} className="text-center">
+                <div className="font-bold text-lg mb-2">{chord}</div>
+                <div className="space-y-1">
+                  {selectedSong.voicings[index].slice().reverse().map((midi, voiceIndex) => {
+                    const actualVoiceIndex = 3 - voiceIndex;
+                    return (
+                      <div key={actualVoiceIndex} className="flex items-center justify-center space-x-1">
+                        <div 
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: voiceColors[actualVoiceIndex] }}
+                        />
+                        <span className="font-mono text-xs">{midiToNote(midi)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Movement Flow Visualization */}
+          <div className="voice-chart-container">
+            <div className="relative h-64 w-full bg-white rounded border p-6 mb-4 overflow-hidden">
+              <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+              {/* Reference grid lines */}
+              {/* Horizontal pitch reference lines */}
+              {[0, 15, 30, 45, 60, 75, 90].map(y => (
+                <line
+                  key={`h-${y}`}
+                  x1="0"
+                  x2="100"
+                  y1={y}
+                  y2={y}
+                  stroke="#e5e7eb"
+                  strokeWidth="0.2"
+                  strokeDasharray={y === 45 ? "none" : "1,1"}
+                  vectorEffect="non-scaling-stroke"
+                />
+              ))}
+              
+              {/* Vertical chord transition lines */}
+              {selectedSong.voicings.map((_, chordIndex) => {
+                if (chordIndex === 0 || chordIndex === selectedSong.voicings.length - 1) return null;
+                const x = (chordIndex / (selectedSong.voicings.length - 1)) * 100;
+                return (
+                  <line
+                    key={`v-${chordIndex}`}
+                    x1={x}
+                    x2={x}
+                    y1="5"
+                    y2="80"
+                    stroke="#d1d5db"
+                    strokeWidth="0.2"
+                    strokeDasharray="1,1"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                );
+              })}
+              
+              {/* Pitch labels */}
+              {[
+                { y: 0, label: 'High' },
+                { y: 15, label: 'C5' },
+                { y: 30, label: 'C4.5' },
+                { y: 45, label: 'C4' },
+                { y: 60, label: 'C3.5' },
+                { y: 75, label: 'C3' },
+                { y: 90, label: 'Low' }
+              ].map(({ y, label }) => (
+                <text
+                  key={`label-${y}`}
+                  x="1"
+                  y={y + 1}
+                  className="fill-gray-500"
+                  fontSize="2.5"
+                  fontFamily="system-ui"
+                >
+                  {label}
+                </text>
+              ))}
+              
+              {/* Chord labels at bottom */}
+              {selectedSong.progression.map((chord, chordIndex) => {
+                const x = (chordIndex / (selectedSong.voicings.length - 1)) * 100;
+                return (
+                  <text
+                    key={`chord-${chordIndex}`}
+                    x={x}
+                    y="95"
+                    textAnchor="middle"
+                    className="fill-gray-700"
+                    fontSize="3"
+                    fontWeight="600"
+                    fontFamily="system-ui"
+                  >
+                    {chord}
+                  </text>
+                );
+              })}
+
+              {/* Individual connecting lines between adjacent chords for each voice */}
+              {selectedSong.voicings.slice(0, -1).map((voicing, chordIndex) => {
+                const nextVoicing = selectedSong.voicings[chordIndex + 1];
+                return [0, 1, 2, 3].map(voiceIndex => {
+                  const x1 = (chordIndex / (selectedSong.voicings.length - 1)) * 100;
+                  const x2 = ((chordIndex + 1) / (selectedSong.voicings.length - 1)) * 100;
+                  const y1 = 80 - ((voicing[voiceIndex] - 48) / 32) * 70;
+                  const y2 = 80 - ((nextVoicing[voiceIndex] - 48) / 32) * 70;
+                  
+                  const distance = Math.abs(nextVoicing[voiceIndex] - voicing[voiceIndex]);
+                  const isCommon = distance === 0;
+                  
+                  return (
+                    <line
+                      key={`connect-${chordIndex}-${voiceIndex}`}
+                      x1={x1}
+                      x2={x2}
+                      y1={y1}
+                      y2={y2}
+                      stroke={voiceColors[voiceIndex]}
+                      strokeWidth={isCommon ? "1" : distance <= 2 ? "0.8" : "0.6"}
+                      strokeDasharray={isCommon ? "none" : distance > 4 ? "2,1" : "none"}
+                      opacity={isCommon ? "1" : distance <= 2 ? "0.9" : "0.7"}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  );
+                });
+              })}
+              
+              {/* Chord markers - larger and more prominent */}
+              {selectedSong.voicings.map((voicing, chordIndex) => (
+                <g key={`markers-${chordIndex}`}>
+                  {voicing.map((midi, voiceIndex) => {
+                    const x = (chordIndex / (selectedSong.voicings.length - 1)) * 100;
+                    const y = 80 - ((midi - 48) / 32) * 70;
+                    return (
+                      <circle
+                        key={`marker-${chordIndex}-${voiceIndex}`}
+                        cx={x}
+                        cy={y}
+                        r="1.2"
+                        fill={voiceColors[voiceIndex]}
+                        stroke="white"
+                        strokeWidth="0.3"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    );
+                  })}
+                </g>
+              ))}
+              
+              {/* Voice name indicators on the right */}
+              {voiceNames.map((name, index) => {
+                const lastVoicing = selectedSong.voicings[selectedSong.voicings.length - 1];
+                const midi = lastVoicing[index];
+                const y = 80 - ((midi - 48) / 32) * 70;
+                return (
+                  <g key={`voice-label-${index}`}>
+                    <text
+                      x="96"
+                      y={y + 1}
+                      textAnchor="end"
+                      className="font-semibold"
+                      fill={voiceColors[index]}
+                      fontSize="2.8"
+                      fontFamily="system-ui"
+                    >
+                      {name}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+        </div>
+        </div>
+
+        {/* Detailed Transitions */}
+        <div className="space-y-4">
+          {transitions.map((transition, index) => (
+            <div key={index} className="bg-white p-4 rounded border">
+              <h6 className="font-medium mb-3">
+                Transition {index + 1}: {transition.fromChord} → {transition.toChord}
+              </h6>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h6 className="text-sm font-medium mb-2">Voice Movements:</h6>
+                  <div className="space-y-1">
+                    {transition.voiceMovements.map((movement) => (
+                      <div key={movement.voiceIndex} className="flex items-center space-x-2 text-sm">
+                        <div 
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: voiceColors[movement.voiceIndex] }}
+                        />
+                        <span className="w-12">{movement.voiceName}:</span>
+                        <span className="font-mono">
+                          {midiToNote(movement.from)} {movement.direction} {midiToNote(movement.to)}
+                        </span>
+                        <span className={`px-1 py-0.5 rounded text-xs ${
+                          movement.isCommon ? 'bg-green-100 text-green-800' : 
+                          movement.distance <= 2 ? 'bg-blue-100 text-blue-800' :
+                          movement.distance <= 4 ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {movement.isCommon ? 'CT' : `${movement.distance}st`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="flex items-center">
+                  <div className="bg-gray-50 p-3 rounded w-full">
+                    <span className="font-medium">Total Movement: </span>
+                    <span className="font-mono text-lg">{transition.totalMovement} semitones</span>
+                    <div className="text-xs text-gray-600 mt-1">
+                      {transition.totalMovement <= 4 ? 'Excellent' :
+                       transition.totalMovement <= 8 ? 'Good' :
+                       transition.totalMovement <= 12 ? 'Fair' : 'Needs work'} voice leading
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 p-3 bg-blue-50 rounded">
+          <h6 className="font-medium mb-2">Overall Analysis:</h6>
+          <div className="text-sm space-y-1">
+            <div>
+              <span className="font-medium">Average movement per transition: </span>
+              <span className="font-mono">
+                {(transitions.reduce((sum, t) => sum + t.totalMovement, 0) / transitions.length).toFixed(1)} semitones
+              </span>
+            </div>
+            <div>
+              <span className="font-medium">Common tones: </span>
+              <span>
+                {transitions.reduce((sum, t) => 
+                  sum + t.voiceMovements.filter(v => v.isCommon).length, 0
+                )} out of {transitions.length * 4} total voice movements
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const VoicingDisplay = ({ voicing, chordSymbol, index, isActive }) => {
     return (
       <div className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
@@ -571,7 +985,7 @@ const VoiceLeadingTrainer = ({ audioEngine }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg">
+    <div className="bg-white p-6 rounded-lg shadow-lg voice-leading-section">
       <h2 className="text-2xl font-bold mb-4">Voice Leading Trainer</h2>
       <p className="text-gray-600 mb-6">
         Watch how individual voices move smoothly between chord changes
@@ -625,6 +1039,19 @@ const VoiceLeadingTrainer = ({ audioEngine }) => {
         >
           {showMovement ? 'Hide' : 'Show'} Movement Analysis
         </button>
+
+        {showMovement && (
+          <button
+            onClick={() => setShowAllTransitions(!showAllTransitions)}
+            className={`px-4 py-2 rounded-lg font-medium ${
+              showAllTransitions 
+                ? 'bg-purple-500 text-white hover:bg-purple-600'
+                : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+            }`}
+          >
+            {showAllTransitions ? 'Single Transition' : 'All Transitions'} View
+          </button>
+        )}
         
         <button
           onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
@@ -658,7 +1085,7 @@ const VoiceLeadingTrainer = ({ audioEngine }) => {
         </div>
       </div>
 
-      <VoiceMovementVisualizer />
+      {showAllTransitions ? <AllTransitionsView /> : <VoiceMovementVisualizer />}
     </div>
   );
 };
@@ -712,7 +1139,7 @@ const JazzPianoTrainer = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 app-container">
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
