@@ -45,13 +45,13 @@ const JAZZ_STANDARDS = [
   },
   {
     title: "All The Things You Are",
-    key: "Ab", 
-    progression: ["Fmin7", "Bbmin7", "Eb7", "Abmaj7", "Dbmaj7", "Dmin7b5", "G7", "Cmaj7"]
+    key: "G#", 
+    progression: ["Fmin7", "A#min7", "D#7", "G#maj7", "C#maj7", "Dmin7b5", "G7", "Cmaj7"]
   },
   {
     title: "Giant Steps",
     key: "B",
-    progression: ["Bmaj7", "D7", "Gmaj7", "Bb7", "Ebmaj7", "Amin7", "D7", "Gmaj7"]
+    progression: ["Bmaj7", "D7", "Gmaj7", "A#7", "D#maj7", "Amin7", "D7", "Gmaj7"]
   },
   {
     title: "ii-V-I in C",
@@ -83,82 +83,73 @@ const parseChord = (chordSymbol) => {
 
 // Components
 const VirtualPiano = ({ highlightedNotes = [], onNoteClick }) => {
-  const whiteKeys = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-  const blackKeys = ['C#', 'D#', '', 'F#', 'G#', 'A#', ''];
+  const keys = [
+    { note: 'C', type: 'white', offset: 0 },
+    { note: 'C#', type: 'black', offset: 35 },
+    { note: 'D', type: 'white', offset: 50 },
+    { note: 'D#', type: 'black', offset: 85 },
+    { note: 'E', type: 'white', offset: 100 },
+    { note: 'F', type: 'white', offset: 150 },
+    { note: 'F#', type: 'black', offset: 185 },
+    { note: 'G', type: 'white', offset: 200 },
+    { note: 'G#', type: 'black', offset: 235 },
+    { note: 'A', type: 'white', offset: 250 },
+    { note: 'A#', type: 'black', offset: 285 },
+    { note: 'B', type: 'white', offset: 300 }
+  ];
+
+  const whiteKeys = keys.filter(key => key.type === 'white');
+  const blackKeys = keys.filter(key => key.type === 'black');
 
   return (
-    <div className="relative bg-gray-900 p-6 rounded-lg shadow-inner">
-      <div className="flex relative justify-center">
+    <div className="bg-gray-100 p-6 rounded-lg">
+      <div className="relative mx-auto" style={{ width: '350px', height: '140px' }}>
         {/* White Keys */}
-        {whiteKeys.map((note, index) => (
+        {whiteKeys.map((key) => (
           <button
-            key={note}
-            className={`relative w-14 h-40 border-r border-gray-400 transition-all duration-150 ${
-              highlightedNotes.includes(note) 
-                ? 'bg-blue-300 hover:bg-blue-400 shadow-lg transform translate-y-1' 
-                : 'bg-white hover:bg-gray-50 active:bg-gray-100'
-            } ${index === 0 ? 'rounded-l-lg border-l' : ''} ${
-              index === whiteKeys.length - 1 ? 'rounded-r-lg' : ''
+            key={key.note}
+            className={`absolute border border-gray-400 rounded-b-md transition-all duration-150 font-medium text-gray-700 ${
+              highlightedNotes.includes(key.note) 
+                ? 'bg-blue-300 border-blue-400 shadow-md' 
+                : 'bg-white hover:bg-gray-50 shadow-sm'
             }`}
-            onClick={() => onNoteClick && onNoteClick(note)}
             style={{
-              boxShadow: highlightedNotes.includes(note) 
-                ? '0 4px 8px rgba(59, 130, 246, 0.3), inset 0 1px 3px rgba(0,0,0,0.1)' 
-                : 'inset 0 1px 3px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.1)'
+              left: `${key.offset}px`,
+              width: '48px',
+              height: '120px',
+              top: '0px'
             }}
+            onClick={() => onNoteClick && onNoteClick(key.note)}
           >
-            <span className={`absolute bottom-3 left-1/2 transform -translate-x-1/2 text-sm font-medium ${
-              highlightedNotes.includes(note) ? 'text-blue-800' : 'text-gray-600'
-            }`}>
-              {note}
+            <span className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs">
+              {key.note}
             </span>
           </button>
         ))}
         
         {/* Black Keys */}
-        <div className="absolute flex top-0 left-0 right-0 justify-center">
-          {blackKeys.map((note, index) => (
-            note ? (
-              <button
-                key={note}
-                className={`w-8 h-24 transition-all duration-150 ${
-                  highlightedNotes.includes(note)
-                    ? 'bg-blue-600 hover:bg-blue-700 shadow-lg transform translate-y-1'
-                    : 'bg-gray-800 hover:bg-gray-700 active:bg-gray-600'
-                }`}
-                style={{
-                  marginLeft: index === 0 ? '2.75rem' : '2.75rem',
-                  boxShadow: highlightedNotes.includes(note)
-                    ? '0 4px 8px rgba(37, 99, 235, 0.4), inset 0 1px 2px rgba(255,255,255,0.1)'
-                    : 'inset 0 1px 2px rgba(255,255,255,0.1), 0 3px 6px rgba(0,0,0,0.3)'
-                }}
-                onClick={() => onNoteClick && onNoteClick(note)}
-              >
-                <span className={`block mt-16 text-xs font-medium ${
-                  highlightedNotes.includes(note) ? 'text-blue-200' : 'text-gray-300'
-                }`}>
-                  {note}
-                </span>
-              </button>
-            ) : (
-              <div 
-                key={`space-${index}`} 
-                className="w-8"
-                style={{ marginLeft: index === 0 ? '2.75rem' : '2.75rem' }}
-              />
-            )
-          ))}
-        </div>
-      </div>
-      
-      {/* Piano Info */}
-      <div className="mt-4 text-center">
-        <p className="text-gray-400 text-sm">
-          {highlightedNotes.length > 0 
-            ? `Highlighted: ${highlightedNotes.join(', ')}` 
-            : 'Click keys to play individual notes'
-          }
-        </p>
+        {blackKeys.map((key) => (
+          <button
+            key={key.note}
+            className={`absolute rounded-b-md transition-all duration-150 font-medium text-white text-xs border border-gray-800 ${
+              highlightedNotes.includes(key.note) 
+                ? 'bg-blue-600 border-blue-700 shadow-lg' 
+                : 'bg-gray-900 hover:bg-gray-700 shadow-md'
+            }`}
+            style={{
+              left: `${key.offset}px`,
+              width: '28px',
+              height: '75px',
+              top: '0px',
+              zIndex: 10
+            }}
+            onClick={() => onNoteClick && onNoteClick(key.note)}
+          >
+            <span className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+              {key.note}
+            </span>
+          </button>
+        ))}
       </div>
     </div>
   );
